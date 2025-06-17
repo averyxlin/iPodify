@@ -1,0 +1,37 @@
+{
+    "song": {
+        "retrieve": {
+            "not_found": "Song does not exist. Please check the ID.",
+            "failed": "Failed to retrieve song"
+        },
+        "create": {
+            "success": "Song created successfully",
+            "failed": "Failed to create song"
+        },
+        "update": {
+            "success": "Song updated successfully",
+            "failed": "Failed to update song"
+        },
+        "delete": {
+            "success": "Song deleted successfully",
+            "failed": "Failed to delete song",
+            "not_found": "Cannot delete song that does not exist. Please check the ID."
+        },
+        "list": {
+            "failed": "Failed to list songs"
+        },
+        "validation": {
+            "spotify_url": {
+                "required": "Spotify URL is required",
+                "invalid": "Invalid Spotify URL. Must start with 'https://open.spotify.com/track/'"
+            },
+            "year": {
+                "invalid": "Year must be between 1970 and 2029"
+            },
+            "unique": {
+                "artist": "An artist can't have multiple songs with the same title. '{title}' already exists for {artist}.",
+                "decade": "A song with the title '{title}' already exists in the {decade} decade."
+            }
+        }
+    }
+} 
