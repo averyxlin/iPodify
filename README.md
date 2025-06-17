@@ -49,7 +49,7 @@ python3 -m venv venv
 source venv/bin/activate
 
 # Install Python dependencies
-pip install -r requirements.txt
+pip install Django djangorestframework django-cors-headers django-filter python-dotenv psycopg2-binary django-redis django-ratelimit
 
 # Start Redis server
 # For macOS:
@@ -75,7 +75,7 @@ python manage.py runserver
 
 ```bash
 # Navigate to frontend directory
-cd frontend
+cd frontend/stereogrid
 
 # Install dependencies
 npm install
