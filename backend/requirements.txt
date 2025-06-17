@@ -1,2 +1,6 @@
+brew install redis
+
 python3 -m venv venv && source venv/bin/activate
-pip install Django djangorestframework django-cors-headers django-filter python-dotenv psycopg2-binary
+pip install Django djangorestframework django-cors-headers django-filter python-dotenv psycopg2-binary django-redis django-ratelimit
+
+brew services start redis

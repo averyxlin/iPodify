@@ -8,6 +8,8 @@ from .models import Song
 from .serializers import SongSerializer
 from django.utils import timezone
 from .utils import get_message
+from django.core.cache import cache
+from django.conf import settings
 
 class SongFilter(FilterSet):
     """filter songs by various fields"""
@@ -74,16 +76,29 @@ class SongViewSet(viewsets.ModelViewSet):
     def list(self, request, *args, **kwargs):
         """
         - list endpoint: get /songs/
+        - cached for 5 minutes
         """
         try:
+            # Generate cache key based on query parameters
+            cache_key = f"songs_list_{request.query_params}"
+            cached_response = cache.get(cache_key)
+            
+            if cached_response:
+                return Response(cached_response)
+
             queryset = self.filter_queryset(self.get_queryset())
             serializer = self.get_serializer(queryset, many=True)
-            return Response({
+            response_data = {
                 "status": "success",
                 "code": status.HTTP_200_OK,
                 "data": serializer.data,
                 "timestamp": timezone.now().isoformat()
-            })
+            }
+            
+            # Cache the response
+            cache.set(cache_key, response_data, settings.CACHE_TTL)
+            
+            return Response(response_data)
         except Exception as e:
             return Response({
                 "status": "error",
@@ -97,8 +112,16 @@ class SongViewSet(viewsets.ModelViewSet):
     def retrieve(self, request, *args, **kwargs):
         """
         - retrieve endpoint: GET /songs/<id>/
+        - cached for 5 minutes
         """
         try: 
+            # Generate cache key based on song ID
+            cache_key = f"song_detail_{kwargs.get('pk')}"
+            cached_response = cache.get(cache_key)
+            
+            if cached_response:
+                return Response(cached_response)
+
             instance = self.get_object()
             serializer = self.get_serializer(instance)
 
@@ -112,6 +135,9 @@ class SongViewSet(viewsets.ModelViewSet):
                 },
                 "timestamp": timezone.now().isoformat()
             }
+
+            # Cache the response
+            cache.set(cache_key, response, settings.CACHE_TTL)
 
             return Response(response, status=status.HTTP_200_OK)
 
@@ -151,6 +177,9 @@ class SongViewSet(viewsets.ModelViewSet):
                 }, status=status.HTTP_400_BAD_REQUEST)
 
             self.perform_create(serializer)
+            
+            # Clear list cache when new song is created
+            cache.delete_pattern("songs_list_*")
 
             response = {
                 "status": "success",
@@ -182,6 +211,10 @@ class SongViewSet(viewsets.ModelViewSet):
             serializer = self.get_serializer(instance, data=request.data, partial=True)
             serializer.is_valid(raise_exception=True)
             self.perform_update(serializer)
+            
+            # Clear caches when song is updated
+            cache.delete_pattern("songs_list_*")
+            cache.delete(f"song_detail_{kwargs.get('pk')}")
             
             response = {
                 "status": "success",
@@ -217,6 +250,10 @@ class SongViewSet(viewsets.ModelViewSet):
         try:
             instance = self.get_object()
             self.perform_destroy(instance)
+
+            # Clear caches when song is deleted
+            cache.delete_pattern("songs_list_*")
+            cache.delete(f"song_detail_{kwargs.get('pk')}")
 
             return Response({
                 "status": "success",
