@@ -141,10 +141,12 @@ class SongViewSet(viewsets.ModelViewSet):
 
         try:
             if not serializer.is_valid():
+                error_field = next(iter(serializer.errors.keys()))
+                error_message = serializer.errors[error_field][0]
                 return Response({
                     "status": "error",
                     "code": status.HTTP_400_BAD_REQUEST,
-                    "message": serializer.errors,
+                    "message": error_message,
                     "timestamp": timezone.now().isoformat()
                 }, status=status.HTTP_400_BAD_REQUEST)
 

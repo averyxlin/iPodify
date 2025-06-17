@@ -162,7 +162,7 @@ class SongTests(TestCase):
         self.assertIn('year', response.data['message'])
         
         # test future year
-        data['year'] = 2025
+        data['year'] = 3000
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data['status'], 'error')
@@ -188,7 +188,7 @@ class SongTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data['status'], 'error')
         self.assertEqual(response.data['code'], 400)
-        self.assertIn('duration', response.data['message'])
+        self.assertIn('Duration', response.data['message'])
         
         # test zero duration
         data['duration'] = 0
@@ -196,7 +196,7 @@ class SongTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data['status'], 'error')
         self.assertEqual(response.data['code'], 400)
-        self.assertIn('duration', response.data['message'])
+        self.assertIn('Duration', response.data['message'])
 
     def test_invalid_spotify_url_validation(self):
         """test validation for invalid spotify URLs"""
@@ -217,7 +217,7 @@ class SongTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data['status'], 'error')
         self.assertEqual(response.data['code'], 400)
-        self.assertIn('spotify_url', response.data['message'])
+        self.assertIn('Spotify', response.data['message'])
 
     def test_song_filtering(self):
         """test filtering songs by various parameters"""

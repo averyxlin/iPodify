@@ -20,6 +20,7 @@ class SongSerializer(serializers.ModelSerializer):
     updated_at = serializers.DateField(read_only=True)
     decade = serializers.ChoiceField(choices=Decade.choices, read_only=True)
     genre = serializers.ChoiceField(choices=Genre.choices)
+    year = serializers.IntegerField()
     
     def validate_year(self, value):
         """validate that the year is within a reasonable range"""
