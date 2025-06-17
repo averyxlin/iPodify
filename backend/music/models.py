@@ -24,7 +24,7 @@ class Song(models.Model):
 
     @classmethod
     def get_decade_from_year(cls, year):
-        """Determine the decade based on the year."""
+        """determine the decade based on the year"""
         if 1970 <= year <= 1979:
             return Decade.SEVENTIES
         elif 1980 <= year <= 1989:
@@ -41,18 +41,11 @@ class Song(models.Model):
             return Decade.TWENTIES_TWO  # default to current decade if year is out of range
 
     def save(self, *args, **kwargs):
-        """Override save to automatically set decade based on year."""
+        """override save to automatically set decade based on year"""
         self.decade = Song.get_decade_from_year(self.year)  # call the class method directly
         super().save(*args, **kwargs)
 
     class Meta:
-        # ensure unique title per artist and per decade
-        # - primary group = artist (since artists don't release duplicate song titles)
-        # - secondary group = decade (70s, 80s, 90s, etc.)
-        unique_together = [
-            ['title', 'artist'],  # no dupe titles by same artist
-            ['title', 'decade']   # no dupe titles in same decade
-        ]
         ordering = ['-created_at']
 
     def __str__(self):

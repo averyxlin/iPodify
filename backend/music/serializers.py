@@ -4,6 +4,8 @@ from rest_framework import serializers
 from .models import Song
 from .types import Decade, Genre
 from .utils import get_message
+from django.core.exceptions import ValidationError
+from django.utils import timezone
 
 """
 - in Django REST Freamework (DRF), serializers handles the conversion of complex data types into Python native datatypes (Model -> JSON/XML)
@@ -21,8 +23,17 @@ class SongSerializer(serializers.ModelSerializer):
     
     def validate_year(self, value):
         """validate that the year is within a reasonable range"""
-        if value < 1970 or value > 2029:
+        current_year = timezone.now().year
+        if value < 1970 or value > current_year:
             raise serializers.ValidationError(get_message('errors.song.validation.year.invalid'))
+        return value
+
+    def validate_duration(self, value):
+        """validate that the duration is positive and reasonable"""
+        if value <= 0:
+            raise serializers.ValidationError(get_message('errors.song.validation.duration.zero_or_negative'))
+        if value > 3600:  # 1 hour in seconds
+            raise serializers.ValidationError(get_message('errors.song.validation.duration.too_long'))
         return value
 
     def validate_spotify_url(self, value):
@@ -52,11 +63,11 @@ class SongSerializer(serializers.ModelSerializer):
             if self.instance:
                 existing_song = existing_song.exclude(pk=self.instance.pk)
             if existing_song.exists():
-                raise serializers.ValidationError({
-                    'title': get_message('errors.song.validation.unique.artist',
-                                       title=title,
-                                       artist=artist)
-                })
+                raise serializers.ValidationError(
+                    get_message('errors.song.validation.unique.artist',
+                              title=title,
+                              artist=artist)
+                )
         
         # check for duplicate title in same decade
         if title and year:
@@ -65,13 +76,37 @@ class SongSerializer(serializers.ModelSerializer):
             if self.instance:
                 existing_song = existing_song.exclude(pk=self.instance.pk)
             if existing_song.exists():
-                raise serializers.ValidationError({
-                    'title': get_message('errors.song.validation.unique.decade',
-                                       title=title,
-                                       decade=decade)
-                })
+                raise serializers.ValidationError(
+                    get_message('errors.song.validation.unique.decade',
+                              title=title,
+                              decade=decade)
+                )
         
         return data
+
+    def to_internal_value(self, data):
+        """Override to handle model's custom error messages"""
+        try:
+            return super().to_internal_value(data)
+        except ValidationError as e:
+            # If the error is from a unique constraint violation
+            if hasattr(e, 'message_dict'):
+                error_msg = str(e)
+                if 'unique' in error_msg.lower():
+                    if 'title' in data and 'artist' in data:
+                        raise serializers.ValidationError({
+                            'title': get_message('errors.song.validation.unique.artist',
+                                               title=data['title'],
+                                               artist=data['artist'])
+                        })
+                    elif 'title' in data and 'year' in data:
+                        decade = Song.get_decade_from_year(data['year'])
+                        raise serializers.ValidationError({
+                            'title': get_message('errors.song.validation.unique.decade',
+                                               title=data['title'],
+                                               decade=decade)
+                        })
+            raise serializers.ValidationError(str(e))
 
     class Meta:
         model = Song

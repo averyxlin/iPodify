@@ -62,8 +62,8 @@ class SongViewSet(viewsets.ModelViewSet):
     
     def get_permissions(self):
         """
-        List and retrieve actions are allowed for any authenticated user.
-        Create, update, and delete actions require admin privileges.
+        list and retrieve actions are allowed for any authenticated user
+        create, update, and delete actions require admin privileges
         """
         if self.action in ['list', 'retrieve']:
             permission_classes = [IsAuthenticated]
@@ -78,7 +78,12 @@ class SongViewSet(viewsets.ModelViewSet):
         try:
             queryset = self.filter_queryset(self.get_queryset())
             serializer = self.get_serializer(queryset, many=True)
-            return Response(serializer.data)
+            return Response({
+                "status": "success",
+                "code": status.HTTP_200_OK,
+                "data": serializer.data,
+                "timestamp": timezone.now().isoformat()
+            })
         except Exception as e:
             return Response({
                 "status": "error",
@@ -135,7 +140,14 @@ class SongViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
 
         try:
-            serializer.is_valid(raise_exception=True)
+            if not serializer.is_valid():
+                return Response({
+                    "status": "error",
+                    "code": status.HTTP_400_BAD_REQUEST,
+                    "message": serializer.errors,
+                    "timestamp": timezone.now().isoformat()
+                }, status=status.HTTP_400_BAD_REQUEST)
+
             self.perform_create(serializer)
 
             response = {
@@ -148,14 +160,6 @@ class SongViewSet(viewsets.ModelViewSet):
 
             headers = self.get_success_headers(serializer.data)
             return Response(response, status=status.HTTP_201_CREATED, headers=headers)
-
-        except serializers.ValidationError as e:
-            return Response({
-                "status": "error",
-                "code": status.HTTP_400_BAD_REQUEST,
-                "message": e.detail,
-                "timestamp": timezone.now().isoformat()
-            }, status=status.HTTP_400_BAD_REQUEST)
 
         except Exception as e:
             return Response({

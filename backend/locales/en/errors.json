@@ -26,7 +26,11 @@
                 "invalid": "Invalid Spotify URL. Must start with 'https://open.spotify.com/track/'"
             },
             "year": {
-                "invalid": "Year must be between 1970 and 2029"
+                "invalid": "Year must be between 1970 and the current year"
+            },
+            "duration": {
+                "zero_or_negative": "Duration must be greater than 0",
+                "too_long": "Duration cannot be longer than 1 hour"
             },
             "unique": {
                 "artist": "An artist can't have multiple songs with the same title. '{title}' already exists for {artist}.",

@@ -107,7 +107,7 @@ class SongTests(TestCase):
         url = reverse('song-list')
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
+        self.assertEqual(len(response.data['data']), 1)
         
     def test_song_detail(self):
         """test retrieving a single song"""
@@ -139,3 +139,136 @@ class SongTests(TestCase):
         url = reverse('song-list')
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)  # changed from 401 to 403 since we're using isauthenticated
+
+    def test_invalid_year_validation(self):
+        """test validation for invalid year values"""
+        self.client.force_authenticate(user=self.admin_user)
+        url = reverse('song-list')
+        
+        # test year before 1970
+        data = {
+            'title': 'Old Song',
+            'artist': 'Test Artist',
+            'album': 'Test Album',
+            'year': 1969,
+            'duration': 180,
+            'spotify_url': 'https://open.spotify.com/track/test123',
+            'genre': Genre.POP
+        }
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data['status'], 'error')
+        self.assertEqual(response.data['code'], 400)
+        self.assertIn('year', response.data['message'])
+        
+        # test future year
+        data['year'] = 2025
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data['status'], 'error')
+        self.assertEqual(response.data['code'], 400)
+        self.assertIn('year', response.data['message'])
+
+    def test_invalid_duration_validation(self):
+        """test validation for invalid duration values"""
+        self.client.force_authenticate(user=self.admin_user)
+        url = reverse('song-list')
+        
+        # test negative duration
+        data = {
+            'title': 'Invalid Duration Song',
+            'artist': 'Test Artist',
+            'album': 'Test Album',
+            'year': 2024,
+            'duration': -180,
+            'spotify_url': 'https://open.spotify.com/track/test123',
+            'genre': Genre.POP
+        }
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data['status'], 'error')
+        self.assertEqual(response.data['code'], 400)
+        self.assertIn('duration', response.data['message'])
+        
+        # test zero duration
+        data['duration'] = 0
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data['status'], 'error')
+        self.assertEqual(response.data['code'], 400)
+        self.assertIn('duration', response.data['message'])
+
+    def test_invalid_spotify_url_validation(self):
+        """test validation for invalid spotify URLs"""
+        self.client.force_authenticate(user=self.admin_user)
+        url = reverse('song-list')
+        
+        # test invalid URL format
+        data = {
+            'title': 'Invalid URL Song',
+            'artist': 'Test Artist',
+            'album': 'Test Album',
+            'year': 2024,
+            'duration': 180,
+            'spotify_url': 'not-a-spotify-url',
+            'genre': Genre.POP
+        }
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data['status'], 'error')
+        self.assertEqual(response.data['code'], 400)
+        self.assertIn('spotify_url', response.data['message'])
+
+    def test_song_filtering(self):
+        """test filtering songs by various parameters"""
+        # create additional test songs
+        Song.objects.create(
+            title='Rock Song',
+            artist='Rock Artist',
+            album='Rock Album',
+            year=2023,
+            duration=240,
+            spotify_url='https://open.spotify.com/track/rock123',
+            genre=Genre.ROCK
+        )
+        Song.objects.create(
+            title='Jazz Song',
+            artist='Jazz Artist',
+            album='Jazz Album',
+            year=2022,
+            duration=300,
+            spotify_url='https://open.spotify.com/track/jazz123',
+            genre=Genre.JAZZ
+        )
+
+        self.client.force_authenticate(user=self.regular_user)
+        base_url = reverse('song-list')
+
+        # test filtering by genre
+        response = self.client.get(f"{base_url}?genre=Rock")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['status'], 'success')
+        self.assertEqual(len(response.data['data']), 1)
+        self.assertEqual(response.data['data'][0]['genre'], 'Rock')
+
+        # test filtering by year
+        response = self.client.get(f"{base_url}?year=2023")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['status'], 'success')
+        self.assertEqual(len(response.data['data']), 1)
+        self.assertEqual(response.data['data'][0]['year'], 2023)
+
+        # test filtering by artist
+        response = self.client.get(f"{base_url}?artist=Test Artist")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['status'], 'success')
+        self.assertEqual(len(response.data['data']), 1)
+        self.assertEqual(response.data['data'][0]['artist'], 'Test Artist')
+
+        # test multiple filters
+        response = self.client.get(f"{base_url}?year=2024&genre=Pop")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['status'], 'success')
+        self.assertEqual(len(response.data['data']), 1)
+        self.assertEqual(response.data['data'][0]['year'], 2024)
+        self.assertEqual(response.data['data'][0]['genre'], 'Pop')
