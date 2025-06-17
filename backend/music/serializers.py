@@ -1,4 +1,4 @@
-# convert Django model instances to JSON (and vice versa)
+# convert django model instances to json (and vice versa)
 
 from rest_framework import serializers
 from .models import Song
@@ -60,7 +60,7 @@ class SongSerializer(serializers.ModelSerializer):
         
         # check for duplicate title in same decade
         if title and year:
-            decade = Song.get_decade_from_year(None, year)
+            decade = Song.get_decade_from_year(year)
             existing_song = Song.objects.filter(title=title, decade=decade)
             if self.instance:
                 existing_song = existing_song.exclude(pk=self.instance.pk)

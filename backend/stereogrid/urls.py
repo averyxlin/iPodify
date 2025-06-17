@@ -21,7 +21,7 @@ from music.views import SongViewSet
 
 # init router
 router = DefaultRouter()
-router.register(r'songs', SongViewSet, basename='song')  # creates all CRUD URLs
+router.register(r'songs', SongViewSet, basename='song')  # creates all CRUD urls
 
 urlpatterns = [
     path('admin/', admin.site.urls),  

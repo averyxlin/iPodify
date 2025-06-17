@@ -38,11 +38,11 @@ class Song(models.Model):
         elif 2020 <= year <= 2029:
             return Decade.TWENTIES_TWO
         else:
-            return Decade.TWENTIES_TWO  # Default to current decade if year is out of range
+            return Decade.TWENTIES_TWO  # default to current decade if year is out of range
 
     def save(self, *args, **kwargs):
         """Override save to automatically set decade based on year."""
-        self.decade = self.get_decade_from_year(self.year)
+        self.decade = Song.get_decade_from_year(self.year)  # call the class method directly
         super().save(*args, **kwargs)
 
     class Meta:

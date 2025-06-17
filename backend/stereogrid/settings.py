@@ -16,19 +16,19 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+# Build paths inside the project like this: base_dir / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
+# Security warning: keep the secret key used in production secret!
 SECRET_KEY = getenv('DJANGO_SECRET_KEY')
 if not SECRET_KEY:
     raise ValueError("No DJANGO_SECRET_KEY set in environment variables")
 
-# SECURITY WARNING: don't run with debug turned on in production!
+# Security warning: don't run with debug turned on in production!
 DEBUG = getenv('DJANGO_DEBUG', 'False').lower() == 'true'
 
 ALLOWED_HOSTS = getenv('DJANGO_ALLOWED_HOSTS', '').split(',') if not DEBUG else []

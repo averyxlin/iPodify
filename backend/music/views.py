@@ -2,6 +2,7 @@ from rest_framework import viewsets, status, serializers
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from django_filters.rest_framework import DjangoFilterBackend, FilterSet, CharFilter, NumberFilter
 from .models import Song
 from .serializers import SongSerializer
@@ -58,6 +59,17 @@ class SongViewSet(viewsets.ModelViewSet):
     serializer_class = SongSerializer # serializer class to convert model instances to json
     pagination_class = StandardResultsSetPagination # add pagination
     filterset_class = SongFilter # add filtering
+    
+    def get_permissions(self):
+        """
+        List and retrieve actions are allowed for any authenticated user.
+        Create, update, and delete actions require admin privileges.
+        """
+        if self.action in ['list', 'retrieve']:
+            permission_classes = [IsAuthenticated]
+        else:
+            permission_classes = [IsAdminUser]
+        return [permission() for permission in permission_classes]
 
     def list(self, request, *args, **kwargs):
         """
