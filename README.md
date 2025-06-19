@@ -1,6 +1,6 @@
 # iPodify
 
-A modern music database and API built with Django and React, featuring an iPod-inspired interface with Spotify integration.
+A modern music database and API built with Django and React, featuring an iPod-inspired interface with Spotify embed integration.
 
 ## Project Requirements Compliance
 
@@ -225,8 +225,9 @@ NEXT_PUBLIC_API_URL=http://localhost:8000/api
 - **Delete Songs**: Select a song and click "Delete" to remove it
 
 ### Spotify Integration
-- **Play Music**: Click on a song with a Spotify URL to play it directly
+- **Play Music**: Click on a song with a Spotify URL to play it directly using Spotify embeds
 - **URL Format**: Use Spotify track URLs in the format `https://open.spotify.com/track/...`
+- **No API Keys Required**: Uses Spotify embeds which handle authentication automatically
 - **Fallback**: If Spotify URL is unavailable, the app displays cover art and song details
 
 ### Navigation

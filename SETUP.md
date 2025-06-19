@@ -103,6 +103,7 @@ The API enforces the following business rules:
 1. **Unique Constraint**: No duplicate song titles within the same artist (Primary group)
 2. **Cross-Group Duplicates**: The same song title can appear in different artists and albums
 3. **Data Validation**: Year must be between 1970 and current year, duration must be positive
+4. **Spotify URL Validation**: Spotify URLs must follow the format `https://open.spotify.com/track/...`
 
 ## Testing the API
 

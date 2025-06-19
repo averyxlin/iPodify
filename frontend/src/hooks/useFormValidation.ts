@@ -52,7 +52,7 @@ export function useFormValidation() {
     if (!spotifyUrl) {
       errors.spotify_url = 'Spotify URL is required';
     } else if (!spotifyUrl.startsWith('https://open.spotify.com/track/')) {
-      errors.spotify_url = 'Must be a valid Spotify track URL';
+      errors.spotify_url = 'Must be a valid Spotify track URL format';
     }
 
     const coverArtUrl = getValue('cover_art_url');
@@ -106,7 +106,7 @@ export function useFormValidation() {
       case 'spotify_url':
         if (!effectiveValue) return 'Spotify URL is required';
         if (!effectiveValue.startsWith('https://open.spotify.com/track/')) {
-          return 'Must be a valid Spotify track URL';
+          return 'Must be a valid Spotify track URL format';
         }
         return '';
       

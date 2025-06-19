@@ -23,7 +23,7 @@
         "validation": {
             "spotify_url": {
                 "required": "Spotify URL is required",
-                "invalid": "Invalid Spotify URL. Must start with 'https://open.spotify.com/track/'"
+                "invalid": "Invalid Spotify URL format. Must start with 'https://open.spotify.com/track/'"
             },
             "year": {
                 "invalid": "Year must be between 1970 and the current year"

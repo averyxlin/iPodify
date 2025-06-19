@@ -39,7 +39,7 @@ class SongSerializer(serializers.ModelSerializer):
         return value
 
     def validate_spotify_url(self, value):
-        """validate that the url is a valid spotify track url"""
+        """validate that the url is a valid spotify track url format"""
         if not value:
             raise serializers.ValidationError(get_message('errors.song.validation.spotify_url.required'))
         if not value.startswith('https://open.spotify.com/track/'):
