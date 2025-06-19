@@ -1,5 +1,5 @@
 """
-URL configuration for stereogrid project.
+URL configuration for ipodify project.
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/5.2/topics/http/urls/
@@ -16,21 +16,13 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from django.http import HttpResponse
-from rest_framework.routers import DefaultRouter
-from music.views import SongViewSet
-
-# init router
-router = DefaultRouter()
-router.register(r'songs', SongViewSet, basename='song')  # creates all CRUD urls
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
-    path('admin/', admin.site.urls),  
-    
-    # router urls
-    # prefix with 'api/' for versioning
-    path('api/', include(router.urls)),
-    
-    # health check endpoint
-    path('health/', lambda request: HttpResponse("OK")),
+    path('admin/', admin.site.urls),
+    path('api/', include('music.urls')),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

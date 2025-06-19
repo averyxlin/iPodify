@@ -1,4 +1,4 @@
-# Stereogrid
+# iPodify
 
 A modern music database and API built with Django and React, featuring an iPod-inspired interface with Spotify integration.
 

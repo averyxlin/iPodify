@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Stereogrid - Music Database",
+  title: "iPodify - Music Database",
   description: "A music database and API built with Django and React",
   icons: {
     icon: [

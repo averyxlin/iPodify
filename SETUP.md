@@ -1,4 +1,4 @@
-# Stereogrid Setup Guide
+# iPodify Setup Guide
 
 This project consists of a Django backend API and a Next.js frontend. The API implements proper CRUD operations with unique constraints that prevent duplicate song titles within the same artist (Primary group), while allowing the same title across different artists and albums.
 

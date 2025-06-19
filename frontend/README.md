@@ -1,4 +1,4 @@
-# Stereogrid Frontend
+# iPodify Frontend
 
 A Next.js frontend application for managing and displaying songs with a dashboard feature.
 

@@ -6,7 +6,7 @@ import sys
 
 def main():
     """run administrative tasks"""
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'stereogrid.settings')
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'ipodify.settings')
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:
