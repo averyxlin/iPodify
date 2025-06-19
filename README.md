@@ -126,7 +126,7 @@ python3 -m venv venv
 source venv/bin/activate
 
 # Install Python dependencies
-pip install Django djangorestframework django-cors-headers django-filter python-dotenv psycopg2-binary django-redis django-ratelimit
+source venv/bin/activate && pip3 install -r requirements.txt
 
 # Start Redis server
 # For macOS:
