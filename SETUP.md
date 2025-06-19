@@ -1,6 +1,6 @@
 # Stereogrid Setup Guide
 
-This project consists of a Django backend API and a Next.js frontend. To fix the 404 error you're experiencing, you need to run both servers.
+This project consists of a Django backend API and a Next.js frontend. The API implements proper CRUD operations with unique constraints that prevent duplicate song titles within the same artist (Primary group), while allowing the same title across different artists and albums.
 
 ## Backend Setup (Django)
 
@@ -85,6 +85,25 @@ sudo apt-get install redis-server
 sudo systemctl start redis
 ```
 
+## API Endpoints
+
+The backend provides the following REST API endpoints:
+
+- **GET /api/songs/** - List all songs with pagination and filtering
+- **POST /api/songs/** - Create a new song
+- **GET /api/songs/{id}/** - Get a specific song by ID
+- **PUT /api/songs/{id}/** - Update a song (full update)
+- **PATCH /api/songs/{id}/** - Update a song (partial update)
+- **DELETE /api/songs/{id}/** - Delete a song
+
+## Business Rules
+
+The API enforces the following business rules:
+
+1. **Unique Constraint**: No duplicate song titles within the same artist (Primary group)
+2. **Cross-Group Duplicates**: The same song title can appear in different artists and albums
+3. **Data Validation**: Year must be between 1970 and current year, duration must be positive
+
 ## Testing the API
 
 Once both servers are running, you can test the API:
@@ -92,4 +111,4 @@ Once both servers are running, you can test the API:
 - **Health check:** `http://localhost:8000/health/`
 - **Songs API:** `http://localhost:8000/api/songs/`
 
-The AddSongModal should now work correctly and be able to create new songs through the API. 
+The frontend provides a complete interface for managing songs with create, read, update, and delete operations. 

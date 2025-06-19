@@ -272,3 +272,151 @@ class SongTests(TestCase):
         self.assertEqual(len(response.data['data']), 1)
         self.assertEqual(response.data['data'][0]['year'], 2024)
         self.assertEqual(response.data['data'][0]['genre'], 'Pop')
+
+    def test_unique_constraint_logic(self):
+        """test that unique constraints work correctly according to requirements"""
+        self.client.force_authenticate(user=self.admin_user)
+        url = reverse('song-list')
+        
+        # clear any existing songs to start fresh
+        Song.objects.all().delete()
+        
+        # create first song
+        song1_data = {
+            'title': 'Unique Test Song',
+            'artist': 'Artist A',
+            'album': 'Album X',
+            'year': 2024,
+            'duration': 180,
+            'spotify_url': 'https://open.spotify.com/track/test123',
+            'genre': Genre.ROCK
+        }
+        response = self.client.post(url, song1_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        
+        # create second song with same title but different artist (should work)
+        song2_data = {
+            'title': 'Unique Test Song',  # Same title
+            'artist': 'Artist B',  # Different artist
+            'album': 'Album Y',
+            'year': 2024,
+            'duration': 180,
+            'spotify_url': 'https://open.spotify.com/track/test456',
+            'genre': Genre.ROCK
+        }
+        response = self.client.post(url, song2_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        
+        # create third song with same title and same artist (should fail - artist constraint)
+        song3_data = {
+            'title': 'Unique Test Song',  # Same title
+            'artist': 'Artist A',  # Same artist as first song
+            'album': 'Album Z',
+            'year': 2024,
+            'duration': 180,
+            'spotify_url': 'https://open.spotify.com/track/test789',
+            'genre': Genre.ROCK
+        }
+        response = self.client.post(url, song3_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('title', response.data['message'].lower())
+        
+        # same title, same album, different artist (should fail - album constraint)
+        song4_data = {
+            'title': 'Unique Test Song',  # Same title
+            'artist': 'Artist C',  # Different artist
+            'album': 'Album X',  # Same album as first song
+            'year': 2024,
+            'duration': 180,
+            'spotify_url': 'https://open.spotify.com/track/test101',
+            'genre': Genre.ROCK
+        }
+        response = self.client.post(url, song4_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('title', response.data['message'].lower())
+        
+        # verify we have exactly 2 songs in the database (both constraints working)
+        self.assertEqual(Song.objects.count(), 2)
+
+    def test_album_level_uniqueness_constraint(self):
+        """test that no two songs with the same title can exist under the same album"""
+        self.client.force_authenticate(user=self.admin_user)
+        url = reverse('song-list')
+        
+        # clear any existing songs to start fresh
+        Song.objects.all().delete()
+        
+        # create first song
+        song1_data = {
+            'title': 'Album Test Song',
+            'artist': 'Artist A',
+            'album': 'Test Album',
+            'year': 2024,
+            'duration': 180,
+            'spotify_url': 'https://open.spotify.com/track/test123',
+            'genre': Genre.POP
+        }
+        response = self.client.post(url, song1_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        
+        # create second song with same title, same album, different artist (should fail)
+        song2_data = {
+            'title': 'Album Test Song',  # Same title
+            'artist': 'Artist B',  # Different artist
+            'album': 'Test Album',  # Same album
+            'year': 2024,
+            'duration': 200,
+            'spotify_url': 'https://open.spotify.com/track/test456',
+            'genre': Genre.ROCK
+        }
+        response = self.client.post(url, song2_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('title', response.data['message'].lower())
+        
+        # create third song with same title, different album, different artist (should work)
+        song3_data = {
+            'title': 'Album Test Song',  # Same title
+            'artist': 'Artist C',  # Different artist
+            'album': 'Different Album',  # Different album
+            'year': 2024,
+            'duration': 220,
+            'spotify_url': 'https://open.spotify.com/track/test789',
+            'genre': Genre.JAZZ
+        }
+        response = self.client.post(url, song3_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        
+        # create fourth song with different title, same album, different artist (should work)
+        song4_data = {
+            'title': 'Different Title',  # Different title
+            'artist': 'Artist D',  # Different artist
+            'album': 'Test Album',  # Same album as first song
+            'year': 2024,
+            'duration': 240,
+            'spotify_url': 'https://open.spotify.com/track/test101',
+            'genre': Genre.CLASSICAL
+        }
+        response = self.client.post(url, song4_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        
+        # verify we have exactly 3 songs in the database
+        self.assertEqual(Song.objects.count(), 3)
+
+    def test_patch_endpoint(self):
+        """test that PATCH endpoint works for partial updates"""
+        self.client.force_authenticate(user=self.admin_user)
+        url = reverse('song-detail', args=[self.song.id])
+        
+        # partial update - only change the title
+        data = {
+            'title': 'Updated Title Only'
+        }
+        response = self.client.patch(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['status'], 'success')
+        
+        # verify only the title was updated, other fields remain the same
+        self.song.refresh_from_db()
+        self.assertEqual(self.song.title, 'Updated Title Only')
+        self.assertEqual(self.song.artist, 'Test Artist')  # s hould remain unchanged
+        self.assertEqual(self.song.album, 'Test Album')    # should remain unchanged

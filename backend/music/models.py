@@ -49,8 +49,8 @@ class Song(models.Model):
     class Meta:
         ordering = ['-created_at']
         unique_together = [
-            ('title', 'artist'),
-            ('title', 'album')
+            ('title', 'artist'),  # primary group constraint
+            ('title', 'album')    # secondary group constraint
         ]
 
     def __str__(self):

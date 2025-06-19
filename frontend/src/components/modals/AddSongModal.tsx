@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
-import { Button } from './button';
-import { Input } from './input';
+import React, { FormEvent } from 'react';
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
 import {
   Select,
   SelectTrigger,
   SelectContent,
   SelectItem,
   SelectValue,
-} from './select';
-import { useSongs } from '../../hooks/useSongs';
+} from '../ui/select';
+import { useSongs, useFormState, useFormValidation } from '../../hooks';
 
 const GENRES = [
   'Rock',
@@ -25,75 +25,51 @@ const GENRES = [
 
 export function AddSongModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { createSong } = useSongs();
-  const [form, setForm] = useState({
-    title: '',
-    artist: '',
-    album: '',
-    year: '',
-    duration: '',
-    spotify_url: '',
-    cover_art_url: '',
-    genre: '',
-  });
-  const [errors, setErrors] = useState<{ [k: string]: string }>({});
-  const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const { validateSongForm } = useFormValidation();
+  const {
+    form,
+    errors,
+    loading,
+    success,
+    handleChange,
+    handleGenreChange,
+    resetForm,
+    setFormError,
+    setFormSuccess,
+    setLoadingState,
+    setErrors,
+  } = useFormState();
 
   if (!open) return null;
 
-  const validate = () => {
-    const errs: { [k: string]: string } = {};
-    if (!form.title) errs.title = 'Title is required';
-    if (!form.artist) errs.artist = 'Artist is required';
-    if (!form.album) errs.album = 'Album is required';
-    const year = parseInt(form.year, 10);
-    const now = new Date().getFullYear();
-    if (!form.year) errs.year = 'Year is required';
-    else if (isNaN(year) || year < 1970 || year > now) errs.year = 'Year must be between 1970 and ' + now;
-    const duration = parseInt(form.duration, 10);
-    if (!form.duration) errs.duration = 'Duration is required';
-    else if (isNaN(duration) || duration <= 0 || duration > 3600) errs.duration = 'Duration must be 1-3600 seconds';
-    if (!form.spotify_url) errs.spotify_url = 'Spotify URL is required';
-    else if (!form.spotify_url.startsWith('https://open.spotify.com/track/')) errs.spotify_url = 'Must be a valid Spotify track URL';
-    if (!form.cover_art_url) errs.cover_art_url = 'Cover art URL is required';
-    else if (!/\.(jpg|jpeg|png|gif)$/i.test(form.cover_art_url)) errs.cover_art_url = 'Must be a valid image URL';
-    if (!form.genre) errs.genre = 'Genre is required';
-    setErrors(errs);
-    return Object.keys(errs).length === 0;
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const handleGenreChange = (value: string) => {
-    setForm({ ...form, genre: value });
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!validate()) return;
-    setLoading(true);
+    
+    const validation = validateSongForm(form);
+    if (!validation.isValid) {
+      setErrors(validation.errors);
+      return;
+    }
+
+    setLoadingState(true);
     setErrors({});
-    setSuccess(false);
+    setFormSuccess();
+    
     try {
       await createSong({
         ...form,
         year: parseInt(form.year, 10),
         duration: parseInt(form.duration, 10),
       });
-      setSuccess(true);
+      
       setTimeout(() => {
-        setForm({
-          title: '', artist: '', album: '', year: '', duration: '', spotify_url: '', cover_art_url: '', genre: '',
-        });
-        setSuccess(false);
+        resetForm();
         onClose();
       }, 1000);
     } catch (err) {
-      setErrors({ form: err instanceof Error ? err.message : 'Network error' });
+      setFormError('form', err instanceof Error ? err.message : 'Network error');
     } finally {
-      setLoading(false);
+      setLoadingState(false);
     }
   };
 
@@ -198,17 +174,32 @@ export function AddSongModal({ open, onClose }: { open: boolean; onClose: () => 
               </SelectTrigger>
               <SelectContent>
                 {GENRES.map((g) => (
-                  <SelectItem key={g} value={g}>{g}</SelectItem>
+                  <SelectItem key={g} value={g}>
+                    {g}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
             {errors.genre && <div className="text-red-500 text-xs mt-1">{errors.genre}</div>}
           </div>
-          {errors.form && <div className="text-red-500 text-xs mt-2">{errors.form}</div>}
-          {success && <div className="text-green-600 text-xs mt-2">Song added!</div>}
-          <div className="flex justify-end gap-2 mt-4">
-            <Button type="button" variant="secondary" onClick={onClose} disabled={loading}>Cancel</Button>
-            <Button type="submit" disabled={loading}>{loading ? 'Adding...' : 'Add Song'}</Button>
+          {errors.form && <div className="text-red-500 text-sm">{errors.form}</div>}
+          {success && <div className="text-green-500 text-sm">Song added successfully!</div>}
+          <div className="flex gap-2 pt-4">
+            <Button
+              type="submit"
+              className="flex-1 bg-blue-950 text-white border border-blue-900 hover:bg-blue-900"
+              disabled={loading}
+            >
+              {loading ? 'Adding...' : 'Add Song'}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              disabled={loading}
+            >
+              Cancel
+            </Button>
           </div>
         </form>
       </div>

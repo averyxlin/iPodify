@@ -1,16 +1,16 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Button } from './button';
-import { Input } from './input';
+import React, { useEffect, FormEvent } from 'react';
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
 import {
   Select,
   SelectTrigger,
   SelectContent,
   SelectItem,
   SelectValue,
-} from './select';
-import { useSongs } from '../../hooks/useSongs';
+} from '../ui/select';
+import { useSongs, useFormState, useFormValidation } from '../../hooks';
 import { Song } from '../../types/song';
 
 const GENRES = [
@@ -28,80 +28,88 @@ const GENRES = [
 
 export function EditSongModal({ open, onClose, song }: { open: boolean; onClose: () => void; song: Song | undefined | null }) {
   const { updateSong } = useSongs();
-  const [form, setForm] = useState({
-    title: '',
-    artist: '',
-    album: '',
-    year: '',
-    duration: '',
-    spotify_url: '',
-    cover_art_url: '',
-    genre: '',
-  });
-  const [errors, setErrors] = useState<{ [k: string]: string }>({});
-  const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const { validateSongForm } = useFormValidation();
+  const {
+    form,
+    errors,
+    loading,
+    success,
+    handleChange,
+    handleGenreChange,
+    resetForm,
+    setFormError,
+    setFormSuccess,
+    setLoadingState,
+    setErrors,
+  } = useFormState();
+
+  useEffect(() => {
+    if (open && song) {
+      resetForm();
+    }
+  }, [open, song, resetForm]);
 
   if (!open || !song || typeof song.id !== 'number') return null;
 
-  const validate = () => {
-    const errs: { [k: string]: string } = {};
-    if (!form.title && !song.title) errs.title = 'Title is required';
-    if (!form.artist && !song.artist) errs.artist = 'Artist is required';
-    if (!form.album && !song.album) errs.album = 'Album is required';
-    const year = parseInt(form.year || (typeof song.year === 'number' ? song.year.toString() : ''), 10);
-    const now = new Date().getFullYear();
-    if (!form.year && !song.year) errs.year = 'Year is required';
-    else if (isNaN(year) || year < 1970 || year > now) errs.year = 'Year must be between 1970 and ' + now;
-    const duration = parseInt(form.duration || (typeof song.duration === 'number' ? song.duration.toString() : ''), 10);
-    if (!form.duration && !song.duration) errs.duration = 'Duration is required';
-    else if (isNaN(duration) || duration <= 0 || duration > 3600) errs.duration = 'Duration must be 1-3600 seconds';
-    if (!form.spotify_url && !song.spotify_url) errs.spotify_url = 'Spotify URL is required';
-    else if ((form.spotify_url || song.spotify_url) && !(form.spotify_url || song.spotify_url || '').startsWith('https://open.spotify.com/track/')) errs.spotify_url = 'Must be a valid Spotify track URL';
-    if (!form.cover_art_url && !song.cover_art_url) errs.cover_art_url = 'Cover art URL is required';
-    else if ((form.cover_art_url || song.cover_art_url) && !/\.(jpg|jpeg|png|gif)$/i.test(form.cover_art_url || song.cover_art_url || '')) errs.cover_art_url = 'Must be a valid image URL';
-    if (!form.genre && !song.genre) errs.genre = 'Genre is required';
-    setErrors(errs);
-    return Object.keys(errs).length === 0;
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const handleGenreChange = (value: string) => {
-    setForm({ ...form, genre: value });
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!validate()) return;
-    setLoading(true);
+    
+    const mergedForm = {
+      title: form.title || song.title || '',
+      artist: form.artist || song.artist || '',
+      album: form.album || song.album || '',
+      year: form.year || (typeof song.year === 'number' ? song.year.toString() : ''),
+      duration: form.duration || (typeof song.duration === 'number' ? song.duration.toString() : ''),
+      spotify_url: form.spotify_url || song.spotify_url || '',
+      cover_art_url: form.cover_art_url || song.cover_art_url || '',
+      genre: form.genre || song.genre || '',
+    };
+
+    const validation = validateSongForm(mergedForm, song);
+    if (!validation.isValid) {
+      setErrors(validation.errors);
+      return;
+    }
+
+    setLoadingState(true);
     setErrors({});
-    setSuccess(false);
+    setFormSuccess();
+    
+    const patchData: Partial<{
+      title: string;
+      artist: string;
+      album: string;
+      year: number;
+      duration: number;
+      spotify_url: string;
+      cover_art_url: string;
+      genre: string;
+    }> = {};
+    if (form.title && form.title !== song.title) patchData.title = form.title;
+    if (form.artist && form.artist !== song.artist) patchData.artist = form.artist;
+    if (form.album && form.album !== song.album) patchData.album = form.album;
+    if (form.year && form.year !== String(song.year)) patchData.year = parseInt(form.year, 10);
+    if (form.duration && form.duration !== String(song.duration)) patchData.duration = parseInt(form.duration, 10);
+    if (form.spotify_url && form.spotify_url !== song.spotify_url) patchData.spotify_url = form.spotify_url;
+    if (form.cover_art_url && form.cover_art_url !== song.cover_art_url) patchData.cover_art_url = form.cover_art_url;
+    if (form.genre && form.genre !== song.genre) patchData.genre = form.genre;
+
+    if (Object.keys(patchData).length === 0) {
+      setLoadingState(false);
+      onClose();
+      return;
+    }
+    
     try {
-      await updateSong(song.id, {
-        title: form.title || song.title,
-        artist: form.artist || song.artist,
-        album: form.album || song.album,
-        year: parseInt(form.year || (typeof song.year === 'number' ? song.year.toString() : ''), 10),
-        duration: parseInt(form.duration || (typeof song.duration === 'number' ? song.duration.toString() : ''), 10),
-        spotify_url: form.spotify_url || song.spotify_url,
-        cover_art_url: form.cover_art_url || song.cover_art_url,
-        genre: form.genre || song.genre,
-      });
-      setSuccess(true);
+      await updateSong(song.id, patchData);
       setTimeout(() => {
-        setForm({
-          title: '', artist: '', album: '', year: '', duration: '', spotify_url: '', cover_art_url: '', genre: '',
-        });
-        setSuccess(false);
+        resetForm();
         onClose();
       }, 1000);
     } catch (err) {
-      setErrors({ form: err instanceof Error ? err.message : 'Network error' });
+      setFormError('form', err instanceof Error ? err.message : 'Network error');
     } finally {
-      setLoading(false);
+      setLoadingState(false);
     }
   };
 
@@ -202,21 +210,36 @@ export function EditSongModal({ open, onClose, song }: { open: boolean; onClose:
           <div>
             <Select value={form.genre} onValueChange={handleGenreChange}>
               <SelectTrigger className="w-full border rounded px-3 py-2 !h-11">
-                <SelectValue placeholder={typeof song.genre === 'string' ? song.genre : 'Select genre'} />
+                <SelectValue placeholder={song.genre || 'Select genre'} />
               </SelectTrigger>
               <SelectContent>
                 {GENRES.map((g) => (
-                  <SelectItem key={g} value={g}>{g}</SelectItem>
+                  <SelectItem key={g} value={g}>
+                    {g}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
             {errors.genre && <div className="text-red-500 text-xs mt-1">{errors.genre}</div>}
           </div>
-          {errors.form && <div className="text-red-500 text-xs mt-2">{errors.form}</div>}
-          {success && <div className="text-green-600 text-xs mt-2">Song updated!</div>}
-          <div className="flex justify-end gap-2 mt-4">
-            <Button type="button" variant="secondary" onClick={onClose} disabled={loading}>Cancel</Button>
-            <Button type="submit" disabled={loading}>{loading ? 'Saving...' : 'Save Changes'}</Button>
+          {errors.form && <div className="text-red-500 text-sm">{errors.form}</div>}
+          {success && <div className="text-green-500 text-sm">Song updated successfully!</div>}
+          <div className="flex gap-2 pt-4">
+            <Button
+              type="submit"
+              className="flex-1 bg-blue-950 text-white border border-blue-900 hover:bg-blue-900"
+              disabled={loading}
+            >
+              {loading ? 'Updating...' : 'Update Song'}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              disabled={loading}
+            >
+              Cancel
+            </Button>
           </div>
         </form>
       </div>

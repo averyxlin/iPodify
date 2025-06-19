@@ -34,7 +34,7 @@ class SongSerializer(serializers.ModelSerializer):
         """validate that the duration is positive and reasonable"""
         if value <= 0:
             raise serializers.ValidationError(get_message('errors.song.validation.duration.zero_or_negative'))
-        if value > 3600:  # 1 hour in seconds
+        if value > 3600:  # 1hr in s
             raise serializers.ValidationError(get_message('errors.song.validation.duration.too_long'))
         return value
 
@@ -60,15 +60,13 @@ class SongSerializer(serializers.ModelSerializer):
         # get the title and artist from the data
         title = data.get('title')
         artist = data.get('artist')
-        year = data.get('year')
         
         # if we're updating an existing instance, get the current values
         if self.instance:
             title = title or self.instance.title
             artist = artist or self.instance.artist
-            year = year or self.instance.year
         
-        # check for duplicate title by same artist
+        # check for duplicate title by same artist (Primary group constraint)
         if title and artist:
             existing_song = Song.objects.filter(title=title, artist=artist)
             if self.instance:
@@ -80,27 +78,13 @@ class SongSerializer(serializers.ModelSerializer):
                               artist=artist)
                 )
         
-        # check for duplicate title in same decade
-        if title and year:
-            decade = Song.get_decade_from_year(year)
-            existing_song = Song.objects.filter(title=title, decade=decade)
-            if self.instance:
-                existing_song = existing_song.exclude(pk=self.instance.pk)
-            if existing_song.exists():
-                raise serializers.ValidationError(
-                    get_message('errors.song.validation.unique.decade',
-                              title=title,
-                              decade=decade)
-                )
-        
         return data
 
     def to_internal_value(self, data):
-        """Override to handle model's custom error messages"""
+        """override to handle model's custom error messages"""
         try:
             return super().to_internal_value(data)
         except ValidationError as e:
-            # If the error is from a unique constraint violation
             if hasattr(e, 'message_dict'):
                 error_msg = str(e)
                 if 'unique' in error_msg.lower():
@@ -109,13 +93,6 @@ class SongSerializer(serializers.ModelSerializer):
                             'title': get_message('errors.song.validation.unique.artist',
                                                title=data['title'],
                                                artist=data['artist'])
-                        })
-                    elif 'title' in data and 'year' in data:
-                        decade = Song.get_decade_from_year(data['year'])
-                        raise serializers.ValidationError({
-                            'title': get_message('errors.song.validation.unique.decade',
-                                               title=data['title'],
-                                               decade=decade)
                         })
             raise serializers.ValidationError(str(e))
 

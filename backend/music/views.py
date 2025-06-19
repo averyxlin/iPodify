@@ -44,7 +44,8 @@ class SongViewSet(viewsets.ModelViewSet):
     - GET /songs/ - list all songs
     - GET /songs/<id>/ - retrieve a single song
     - POST /songs/ - create a new song
-    - PUT /songs/<id>/ - update a song
+    - PUT /songs/<id>/ - update a song (full update)
+    - PATCH /songs/<id>/ - update a song (partial update)
     - DELETE /songs/<id>/ - delete a song
 
     filtering:
@@ -64,8 +65,8 @@ class SongViewSet(viewsets.ModelViewSet):
     
     def get_permissions(self):
         """
-        In DEBUG mode, allow any access for list and retrieve
-        In production, require authentication for list/retrieve and admin for other actions
+        - in DEBUG mode, allow any access for list and retrieve
+        - in production, require authentication for list/retrieve and admin for other actions
         """
         if settings.DEBUG:
             permission_classes = [AllowAny]
@@ -82,7 +83,7 @@ class SongViewSet(viewsets.ModelViewSet):
         - cached for 5 minutes
         """
         try:
-            # Generate cache key based on query parameters
+
             cache_key = f"songs_list_{request.query_params}"
             cached_response = cache.get(cache_key)
             
@@ -98,7 +99,6 @@ class SongViewSet(viewsets.ModelViewSet):
                 "timestamp": timezone.now().isoformat()
             }
             
-            # Cache the response
             cache.set(cache_key, response_data, settings.CACHE_TTL)
             
             return Response(response_data)
@@ -118,7 +118,7 @@ class SongViewSet(viewsets.ModelViewSet):
         - cached for 5 minutes
         """
         try: 
-            # Generate cache key based on song ID
+
             cache_key = f"song_detail_{kwargs.get('pk')}"
             cached_response = cache.get(cache_key)
             
@@ -139,7 +139,6 @@ class SongViewSet(viewsets.ModelViewSet):
                 "timestamp": timezone.now().isoformat()
             }
 
-            # Cache the response
             cache.set(cache_key, response, settings.CACHE_TTL)
 
             return Response(response, status=status.HTTP_200_OK)
@@ -181,7 +180,6 @@ class SongViewSet(viewsets.ModelViewSet):
 
             self.perform_create(serializer)
             
-            # Clear list cache when new song is created
             cache.delete_pattern("songs_list_*")
 
             response = {
@@ -215,7 +213,6 @@ class SongViewSet(viewsets.ModelViewSet):
             serializer.is_valid(raise_exception=True)
             self.perform_update(serializer)
             
-            # Clear caches when song is updated
             cache.delete_pattern("songs_list_*")
             cache.delete(f"song_detail_{kwargs.get('pk')}")
             
@@ -254,7 +251,6 @@ class SongViewSet(viewsets.ModelViewSet):
             instance = self.get_object()
             self.perform_destroy(instance)
 
-            # Clear caches when song is deleted
             cache.delete_pattern("songs_list_*")
             cache.delete(f"song_detail_{kwargs.get('pk')}")
 

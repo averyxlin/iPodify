@@ -1,32 +1,67 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useIpodContext } from '../../contexts/IpodContext';
-import { useSongs } from '../../hooks/useSongs';
+import { useSongs, usePagination, useSpotifyPlayer } from '../../hooks';
 import { Button } from '../ui/button';
 import { Card, CardContent } from '../ui/card';
+import { Skeleton } from '../ui/skeleton';
 import { Song } from '../../types/song';
-import { DeleteSongDialog } from '../ui/DeleteSongDialog';
-import { EditSongModal } from '../ui/EditSongModal';
+import { DeleteSongDialog } from '../modals/DeleteSongDialog';
+import { EditSongModal } from '../modals/EditSongModal';
 import { Spotify } from 'react-spotify-embed';
 
 export function IpodScreen() {
-  const { sidebarOpen, selectedSong, selectedSongID, highlightedSongID, isPlaying, setIsPlaying } = useIpodContext();
+  const { sidebarOpen, selectedSong, selectedSongID, highlightedSongID, isPlaying, setSelectedSongID } = useIpodContext();
   const { songs, deleteSong } = useSongs();
   const hasSelectedSong = selectedSongID !== null;
+  
+  const {
+    currentPage,
+    totalPages,
+    paginatedItems: paginatedSongs,
+    goToPage,
+  } = usePagination<Song>(songs, { itemsPerPage: 5 });
+
+  const {
+    showSpotifyEmbed,
+    spotifyError,
+    showSkeleton,
+    canShowSpotify,
+    handleSpotifyError,
+    handleBackFromSpotify,
+  } = useSpotifyPlayer(selectedSong, isPlaying);
+
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [showSpotifyEmbed, setShowSpotifyEmbed] = useState(false);
-  const [spotifyError, setSpotifyError] = useState(false);
-
-  const songsPerPage = 5;
-  const totalPages = Math.ceil(songs.length / songsPerPage);
-  const startIndex = (currentPage - 1) * songsPerPage;
-  const endIndex = startIndex + songsPerPage;
-  const paginatedSongs = songs.slice(startIndex, endIndex);
 
   const handleDeleteConfirm = async () => {
     if (selectedSongID) {
+      const currentIndex = songs.findIndex((song: Song) => song.id === selectedSongID);
+      
+      // if song not found, just delete + clear selection
+      if (currentIndex === -1) {
+        await deleteSong(selectedSongID);
+        setSelectedSongID(null);
+        setShowDeleteDialog(false);
+        return;
+      }
+      
+      // calc next song ID before deleting current song
+      let nextSongID: number | null = null;
+      if (songs.length > 1) {
+        if (currentIndex >= songs.length - 1) {
+          // if at end, go to prev song
+          nextSongID = songs[currentIndex - 1].id;
+        } else {
+          // otherwise, go to next song
+          nextSongID = songs[currentIndex + 1].id;
+        }
+      }
+      
       await deleteSong(selectedSongID);
+      
+      // set next song as selected
+      setSelectedSongID(nextSongID);
+      
       setShowDeleteDialog(false);
     }
   };
@@ -39,48 +74,17 @@ export function IpodScreen() {
     setShowEditModal(false);
   };
 
-  const handleSpotifyError = () => {
-    setSpotifyError(true);
-    setShowSpotifyEmbed(false);
-    setIsPlaying(false);
-  };
-
-  const handleBackFromSpotify = () => {
-    setShowSpotifyEmbed(false);
-    setSpotifyError(false);
-    setIsPlaying(false);
-  };
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [songs.length]);
-
   useEffect(() => {
     if (highlightedSongID && songs.length > 0) {
       const songIndex = songs.findIndex((song: Song) => song.id === highlightedSongID);
       if (songIndex !== -1) {
-        const pageForSong = Math.floor(songIndex / songsPerPage) + 1;
+        const pageForSong = Math.floor(songIndex / 5) + 1;
         if (pageForSong !== currentPage) {
-          setCurrentPage(pageForSong);
+          goToPage(pageForSong);
         }
       }
     }
-  }, [highlightedSongID, songs, currentPage, songsPerPage]);
-
-  useEffect(() => {
-    setShowSpotifyEmbed(false);
-    setSpotifyError(false);
-  }, [selectedSongID]);
-
-  useEffect(() => {
-    if (isPlaying && selectedSong?.spotify_url && !showSpotifyEmbed) {
-      setShowSpotifyEmbed(true);
-      setSpotifyError(false);
-    } else if (!isPlaying && showSpotifyEmbed) {
-      setShowSpotifyEmbed(false);
-      setSpotifyError(false);
-    }
-  }, [isPlaying, selectedSong, showSpotifyEmbed]);
+  }, [highlightedSongID, songs, currentPage, goToPage]);
 
   return (
     <Card className="w-[90%] h-[55%] rounded-3xl mt-8 flex overflow-hidden relative">
@@ -98,15 +102,17 @@ export function IpodScreen() {
             ))}
           </ul>
         </CardContent>
-        <div className="absolute bottom-0 left-0 w-full flex justify-center py-2 bg-white/80 backdrop-blur rounded-b-3xl">
-          <span className="text-xs text-muted-foreground">
-            Page {currentPage} of {totalPages}
-          </span>
-        </div>
+        {songs.length > 0 && (
+          <div className="absolute bottom-0 left-0 w-full flex justify-center py-2 bg-white/80 backdrop-blur rounded-b-3xl">
+            <span className="text-xs text-muted-foreground">
+              Page {currentPage} of {totalPages}
+            </span>
+          </div>
+        )}
       </Card>
       
-      {showSpotifyEmbed && selectedSong?.spotify_url ? (
-        <div className="flex flex-1 items-center justify-center w-full h-full p-0">
+      {showSpotifyEmbed && canShowSpotify && selectedSong?.spotify_url ? (
+        <div className="flex flex-1 items-center justify-center w-full h-full p-0 relative">
           <div className="aspect-square w-full max-w-[90%] max-h-[90%]">
             <Spotify 
               link={selectedSong.spotify_url} 
@@ -116,6 +122,23 @@ export function IpodScreen() {
               style={{ borderRadius: 0 }}
             />
           </div>
+          {showSkeleton && (
+            <div className="absolute inset-0 aspect-square w-full max-w-[90%] max-h-[90%] flex items-center justify-center bg-white">
+              <div className="w-full h-full flex flex-col items-center justify-center space-y-4">
+                <Skeleton className="w-32 h-32 rounded-xl" />
+                <div className="space-y-2 w-full max-w-[200px]">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-3 w-3/4" />
+                  <Skeleton className="h-3 w-1/2" />
+                </div>
+                <div className="flex space-x-2">
+                  <Skeleton className="w-12 h-12 rounded-full" />
+                  <Skeleton className="w-12 h-12 rounded-full" />
+                  <Skeleton className="w-12 h-12 rounded-full" />
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       ) : spotifyError ? (
         <div className="flex flex-1 items-center justify-center w-full p-6">
@@ -154,7 +177,9 @@ export function IpodScreen() {
         </div>
       ) : (
         <div className="flex flex-1 items-center justify-center w-full p-6">
-          <span className="text-muted-foreground text-lg">Select a song from the menu</span>
+          <span className="text-muted-foreground text-lg">
+            {songs.length === 0 ? "Add a song to your iPod" : "Select a song from the menu"}
+          </span>
         </div>
       )}
       

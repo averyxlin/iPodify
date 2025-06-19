@@ -1,13 +1,13 @@
 'use client';
 
 import React from 'react';
-import { Button } from './ui/button';
-import { AddSongModal } from './ui/AddSongModal';
-import { DeleteSongDialog } from './ui/DeleteSongDialog';
-import { EditSongModal } from './ui/EditSongModal';
+import { Button } from '../ui/button';
+import { AddSongModal } from '../modals/AddSongModal';
+import { DeleteSongDialog } from '../modals/DeleteSongDialog';
+import { EditSongModal } from '../modals/EditSongModal';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faTrash, faPen } from '@fortawesome/free-solid-svg-icons';
-import { useModalState, useSongActions } from '../hooks';
+import { useModalState, useSongActions } from '../../hooks';
 
 export function TopBar() {
   const addSongModal = useModalState();

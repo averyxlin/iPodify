@@ -95,7 +95,7 @@ export function useSongs() {
   }) => {
     try {
       const response = await fetch(`${API_BASE_URL}/songs/${id}/`, {
-        method: 'PUT',
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(songData),
       });

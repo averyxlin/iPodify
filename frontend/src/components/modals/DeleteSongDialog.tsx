@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button } from './button';
+import { Button } from '../ui/button';
 
 export function DeleteSongDialog({ open, onConfirm, onCancel }: { open: boolean; onConfirm: () => void; onCancel: () => void }) {
   if (!open) return null;
