@@ -1,14 +1,16 @@
 import React from "react";
+import { Card, CardContent } from "../ui/card";
+import { Skeleton } from "../ui/skeleton";
 
 export function SongsTableSkeleton() {
   return (
-    <div className="overflow-x-auto px-4 sm:px-8 md:px-16 lg:px-32 py-8">
-      <div className="animate-pulse">
-        <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded mb-4"></div>
+    <Card className="mx-4 sm:mx-8 md:mx-16 lg:mx-32 my-8">
+      <CardContent className="p-4">
+        <Skeleton className="h-10 mb-4" />
         {[...Array(5)].map((_, i) => (
-          <div key={i} className="h-16 bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
+          <Skeleton key={i} className="h-16 mb-2" />
         ))}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 } 

@@ -1,6 +1,6 @@
 import React from "react";
-import { SongsTableSkeleton } from "./SongsTableSkeleton";
-import { SongsCardListSkeleton } from "./SongsCardListSkeleton";
+import { TableSkeleton } from "../skeletons/TableSkeleton";
+import { SongsCardListSkeleton } from "../cards/SongsCardListSkeleton";
 import { useMediaQuery } from "../../lib/useMediaQuery";
 
 export function SongsListResponsiveSkeleton() {
@@ -8,5 +8,5 @@ export function SongsListResponsiveSkeleton() {
   if (isMobile) {
     return <SongsCardListSkeleton />;
   }
-  return <SongsTableSkeleton />;
+  return <TableSkeleton />;
 } 

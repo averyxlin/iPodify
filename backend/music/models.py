@@ -9,6 +9,7 @@ class Song(models.Model):
     year = models.IntegerField()
     duration = models.IntegerField()
     spotify_url = models.CharField(max_length=1000)
+    cover_art_url = models.URLField(max_length=1000, null=True, blank=True)
     decade = models.CharField(
         max_length=3,
         choices=Decade.choices,
@@ -47,6 +48,10 @@ class Song(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+        unique_together = [
+            ('title', 'artist'),
+            ('title', 'album')
+        ]
 
     def __str__(self):
         return f"{self.title} - {self.artist}"

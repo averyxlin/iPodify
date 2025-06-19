@@ -21,6 +21,7 @@ class SongSerializer(serializers.ModelSerializer):
     decade = serializers.ChoiceField(choices=Decade.choices, read_only=True)
     genre = serializers.ChoiceField(choices=Genre.choices)
     year = serializers.IntegerField()
+    cover_art_url = serializers.URLField(required=False, allow_null=True, allow_blank=True)
     
     def validate_year(self, value):
         """validate that the year is within a reasonable range"""
@@ -43,6 +44,15 @@ class SongSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(get_message('errors.song.validation.spotify_url.required'))
         if not value.startswith('https://open.spotify.com/track/'):
             raise serializers.ValidationError(get_message('errors.song.validation.spotify_url.invalid'))
+        return value
+
+    def validate_cover_art_url(self, value):
+        """validate that the cover art url is a valid image url"""
+        if not value:
+            raise serializers.ValidationError(get_message('errors.song.validation.cover_art_url.required'))
+        valid_extensions = ('.jpg', '.jpeg', '.png', '.gif')
+        if not any(value.lower().endswith(ext) for ext in valid_extensions):
+            raise serializers.ValidationError(get_message('errors.song.validation.cover_art_url.invalid'))
         return value
 
     def validate(self, data):

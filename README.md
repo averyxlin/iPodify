@@ -2,6 +2,29 @@
 
 A music database and API built with Django and React.
 
+## Project Requirements Compliance
+
+This project meets the full-stack coding task requirements with the following interpretation:
+
+### Item Management System
+- **Items** = Songs (with title, artist, album, year, duration, etc.)
+- **Groups** = Artist (Primary group) and Album (Secondary group)
+- **Unique Constraints**: No duplicate song titles within the same artist (Primary group) or same album (Secondary group)
+
+### API Endpoints
+- `GET /api/songs/` - List all items (songs)
+- `POST /api/songs/` - Create new item (song)
+- `PUT /api/songs/{id}/` - Update existing item (song)
+- `GET /api/songs/{id}/` - Get specific item (song)
+
+### Business Rules Implementation
+The unique constraint logic ensures:
+- A song titled "Rock" can exist in Artist A (Primary) AND Album B (Secondary)
+- "Rock" cannot exist twice in the same artist (Primary group violation)
+- "Rock" cannot exist twice in the same album (Secondary group violation)
+
+This implementation satisfies the requirement: "Each group should contain only unique item names. For example, an item named 'Rock' can appear in both the Primary and Secondary groups, but there can't be two items named 'Rock' in the same group."
+
 ## Prerequisites
 
 - Python 3.x
@@ -75,10 +98,10 @@ python manage.py runserver
 
 ```bash
 # Navigate to frontend directory
-cd frontend/stereogrid
+cd frontend
 
 # Install dependencies
-npm install
+npm install @fortawesome/fontawesome-svg-core @fortawesome/free-solid-svg-icons @fortawesome/react-fontawesome @radix-ui/react-alert-dialog @radix-ui/react-dialog @radix-ui/react-label @radix-ui/react-select @radix-ui/react-separator @radix-ui/react-slot class-variance-authority clsx lucide-react next react react-dom react-icons swr tailwind-merge @eslint/eslintrc @tailwindcss/postcss @types/node @types/react @types/react-dom eslint eslint-config-next tailwindcss tw-animate-css typescript
 
 # Start development server
 npm run dev
