@@ -2,13 +2,14 @@
 
 import React, { createContext, useContext, ReactNode } from 'react';
 import { useIpodControls } from '../hooks';
+import { Song } from '../types/song';
 
 interface IpodContextType {
   selectedSongID: number | null;
   setSelectedSongID: (id: number | null) => void;
   highlightedSongID: number | null;
   setHighlightedSongID: (id: number | null) => void;
-  selectedSong: any | null;
+  selectedSong: Song | null;
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
   isPlaying: boolean;

@@ -10,6 +10,15 @@ A Next.js frontend application for managing and displaying songs with a dashboar
 - **Visual Feedback**: Cards show cover art with fallback placeholders when images fail to load
 - **Responsive Design**: Grid adapts from 1 column on mobile to 5 columns on large screens
 
+### iPod Interface
+- **Play/Pause Button**: Use the play/pause button on the iPod wheel to toggle between song details and Spotify playback
+  - Press play to show the Spotify embed player
+  - Press pause to return to the song details view
+- **Spotify Integration**: Songs with Spotify URLs can be played directly in the app
+  - **Note**: Full song playback requires being signed into Spotify
+  - Without Spotify authentication, only 30-second previews will be available
+  - Sign in to your Spotify account to enable full song playback
+
 ### Songs Table
 - **Sortable Columns**: Click column headers to sort by title, artist, album, or year
 - **Add/Remove Buttons**: Each row has a + button that transforms to a - button when the song is in the dashboard
@@ -47,16 +56,30 @@ A Next.js frontend application for managing and displaying songs with a dashboar
    npm install
    ```
 
-2. Start the development server:
+2. Set up environment variables:
+   ```bash
+   cp .env.example .env
+   # Edit .env with your backend API URL (default: http://localhost:8000/api)
+   ```
+
+3. Start the development server:
    ```bash
    npm run dev
    ```
 
-3. Open [http://localhost:3000](http://localhost:3000) in your browser
+4. Open [http://localhost:3000](http://localhost:3000) in your browser
 
 ## Backend Requirements
 
-The frontend expects a Django REST API backend running on `http://localhost:8000` with the following endpoints:
+The frontend expects a Django REST API backend. Configure the backend URL in your `.env` file:
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8000/api
+```
+
+**Note:** Customize the port in the API URL if your backend is running on a different port than 8000.
+
+The backend should provide the following endpoints:
 
 - `GET /api/songs/` - List all songs
 - `GET /api/songs/{id}/` - Get individual song

@@ -2,7 +2,6 @@
 import React from 'react';
 import { IpodProvider } from '../contexts/IpodContext';
 import { IpodShell, TopBar } from '../components';
-import { Card } from '../components/ui/card';
 
 export default function Home() {
   return (

@@ -2,7 +2,7 @@
 
 import useSWR from "swr";
 
-const API_BASE_URL = 'http://localhost:8000/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
 
 const fetcher = async (url: string) => {
   try {
@@ -14,9 +14,6 @@ const fetcher = async (url: string) => {
       },
     });
     
-    console.log('Response status:', response.status);
-    console.log('Response headers:', Object.fromEntries(response.headers.entries()));
-    
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Error response:', errorText);
@@ -24,7 +21,6 @@ const fetcher = async (url: string) => {
     }
     
     const data = await response.json();
-    console.log('Response data:', data);
     return data;
   } catch (error) {
     console.error('Fetch error:', error);
@@ -123,19 +119,5 @@ export function useSongs() {
     createSong,
     deleteSong,
     updateSong
-  };
-}
-
-export function useSong(id: string) {
-  const { data, error, isLoading, mutate } = useSWR(
-    id ? `${API_BASE_URL}/songs/${id}/` : null,
-    fetcher
-  );
-
-  return {
-    song: data?.data,
-    isLoading,
-    isError: error,
-    mutate
   };
 } 

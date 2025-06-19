@@ -1,64 +1,98 @@
 'use client';
 
-import { useSongsList } from './useSongsList';
+import { useSongs } from './useSongs';
 import { useIpodUI } from './useIpodUI';
-import { usePlayState } from './usePlayState';
 import { Song } from '../types/song';
+import { useState } from 'react';
 
 export function useIpodControls() {
-  const songsList = useSongsList();
+  const { songs } = useSongs();
   const ipodUI = useIpodUI();
-  const playState = usePlayState();
+  
+  const [selectedSongID, setSelectedSongID] = useState<number | null>(null);
+  const [highlightedSongID, setHighlightedSongID] = useState<number | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  const selectedSong = songs.find((song: Song) => song.id === selectedSongID) || null;
+  const highlightedIndex = songs.findIndex((song: Song) => song.id === highlightedSongID);
+
+  const selectSong = (id: number | null) => setSelectedSongID(id);
+  const highlightSong = (id: number | null) => setHighlightedSongID(id);
+
+  const highlightNext = () => {
+    if (songs.length === 0) return;
+    if (highlightedIndex < songs.length - 1) {
+      setHighlightedSongID(songs[highlightedIndex + 1].id);
+    } else {
+      setHighlightedSongID(songs[0].id);
+    }
+  };
+
+  const highlightPrevious = () => {
+    if (songs.length === 0) return;
+    if (highlightedIndex > 0) {
+      setHighlightedSongID(songs[highlightedIndex - 1].id);
+    } else {
+      setHighlightedSongID(songs[songs.length - 1].id);
+    }
+  };
 
   const onMenu = () => ipodUI.toggleSidebar();
-  const onPlayPause = () => playState.toggle();
+  
+  const onPlayPause = () => {
+    if (selectedSong && selectedSong.spotify_url) {
+      setIsPlaying(!isPlaying);
+    } else {
+      setIsPlaying(!isPlaying);
+    }
+  };
   
   const onUp = () => {
-    if (songsList.selectedSongID !== null && !ipodUI.sidebarOpen && songsList.songs.length > 0) {
-      const currentIndex = songsList.songs.findIndex((song: Song) => song.id === songsList.selectedSongID);
+    if (selectedSongID !== null && !ipodUI.sidebarOpen && songs.length > 0) {
+      const currentIndex = songs.findIndex((song: Song) => song.id === selectedSongID);
       if (currentIndex > 0) {
-        songsList.selectSong(songsList.songs[currentIndex - 1].id);
+        selectSong(songs[currentIndex - 1].id);
       } else {
-        songsList.selectSong(songsList.songs[songsList.songs.length - 1].id);
+        selectSong(songs[songs.length - 1].id);
       }
     } else {
-      songsList.highlightPrevious();
+      highlightPrevious();
     }
   };
   
   const onDown = () => {
-    if (songsList.selectedSongID !== null && !ipodUI.sidebarOpen && songsList.songs.length > 0) {
-      const currentIndex = songsList.songs.findIndex((song: Song) => song.id === songsList.selectedSongID);
-      if (currentIndex < songsList.songs.length - 1) {
-        songsList.selectSong(songsList.songs[currentIndex + 1].id);
+    if (selectedSongID !== null && !ipodUI.sidebarOpen && songs.length > 0) {
+      const currentIndex = songs.findIndex((song: Song) => song.id === selectedSongID);
+      if (currentIndex < songs.length - 1) {
+        selectSong(songs[currentIndex + 1].id);
       } else {
-        songsList.selectSong(songsList.songs[0].id);
+        selectSong(songs[0].id);
       }
     } else {
-      songsList.highlightNext();
+      highlightNext();
     }
   };
   
   const onCenter = () => {
-    if (!ipodUI.sidebarOpen && songsList.selectedSongID !== null) {
+    if (!ipodUI.sidebarOpen && selectedSongID !== null) {
       ipodUI.toggleTopBar();
       return;
     }
-    songsList.selectSong(songsList.highlightedSongID);
-    ipodUI.closeSidebar();
+    selectSong(highlightedSongID);
+    ipodUI.setSidebarOpen(false);
   };
 
   return {
-    selectedSongID: songsList.selectedSongID,
-    setSelectedSongID: songsList.selectSong,
-    highlightedSongID: songsList.highlightedSongID,
-    setHighlightedSongID: songsList.highlightSong,
-    selectedSong: songsList.selectedSong,
+    selectedSongID,
+    setSelectedSongID: selectSong,
+    highlightedSongID,
+    setHighlightedSongID: highlightSong,
+    selectedSong,
     
     sidebarOpen: ipodUI.sidebarOpen,
     setSidebarOpen: ipodUI.setSidebarOpen,
-    isPlaying: playState.isPlaying,
-    setIsPlaying: playState.setIsPlaying,
+    isPlaying,
+    setIsPlaying,
     showTopBar: ipodUI.showTopBar,
     setShowTopBar: ipodUI.setShowTopBar,
     

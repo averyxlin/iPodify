@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { useIpodContext } from '../contexts/IpodContext';
 import { useSongs } from './useSongs';
 import { useModalState } from './useModalState';

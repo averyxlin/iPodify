@@ -9,12 +9,6 @@ export function useIpodUI() {
   const toggleSidebar = () => setSidebarOpen((open) => !open);
   const toggleTopBar = () => setShowTopBar((show) => !show);
 
-  const closeSidebar = () => setSidebarOpen(false);
-  const openSidebar = () => setSidebarOpen(true);
-
-  const closeTopBar = () => setShowTopBar(false);
-  const openTopBar = () => setShowTopBar(true);
-
   return {
     sidebarOpen,
     showTopBar,
@@ -23,9 +17,5 @@ export function useIpodUI() {
     setShowTopBar,
     toggleSidebar,
     toggleTopBar,
-    closeSidebar,
-    openSidebar,
-    closeTopBar,
-    openTopBar,
   };
 } 

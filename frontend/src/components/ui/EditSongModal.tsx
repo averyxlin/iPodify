@@ -57,9 +57,9 @@ export function EditSongModal({ open, onClose, song }: { open: boolean; onClose:
     if (!form.duration && !song.duration) errs.duration = 'Duration is required';
     else if (isNaN(duration) || duration <= 0 || duration > 3600) errs.duration = 'Duration must be 1-3600 seconds';
     if (!form.spotify_url && !song.spotify_url) errs.spotify_url = 'Spotify URL is required';
-    else if ((form.spotify_url || song.spotify_url) && !(form.spotify_url || song.spotify_url).startsWith('https://open.spotify.com/track/')) errs.spotify_url = 'Must be a valid Spotify track URL';
+    else if ((form.spotify_url || song.spotify_url) && !(form.spotify_url || song.spotify_url || '').startsWith('https://open.spotify.com/track/')) errs.spotify_url = 'Must be a valid Spotify track URL';
     if (!form.cover_art_url && !song.cover_art_url) errs.cover_art_url = 'Cover art URL is required';
-    else if ((form.cover_art_url || song.cover_art_url) && !/\.(jpg|jpeg|png|gif)$/i.test(form.cover_art_url || song.cover_art_url)) errs.cover_art_url = 'Must be a valid image URL';
+    else if ((form.cover_art_url || song.cover_art_url) && !/\.(jpg|jpeg|png|gif)$/i.test(form.cover_art_url || song.cover_art_url || '')) errs.cover_art_url = 'Must be a valid image URL';
     if (!form.genre && !song.genre) errs.genre = 'Genre is required';
     setErrors(errs);
     return Object.keys(errs).length === 0;
