@@ -112,14 +112,14 @@ npm run dev
 - Backend API runs on http://localhost:8000
 - Frontend development server runs on http://localhost:3000
 - Redis runs on localhost:6379
-- PostgreSQL runs on localhost:5432
+- PostgreSQL database is hosted on Neon
 
 ## Features
 
 - RESTful API with Django REST Framework
 - Redis caching for improved performance
 - Rate limiting for API endpoints
-- PostgreSQL database
+- Neon: PostgreSQL database
 - React frontend
 - Authentication and authorization
 - Filtering and search capabilities
