@@ -265,17 +265,3 @@ All API responses follow a consistent format:
   "timestamp": "2024-01-01T00:00:00Z"
 }
 ```
-
-## 🚀 Deployment
-
-### Backend Deployment
-- Configure production database settings
-- Set `DJANGO_DEBUG=False`
-- Configure Redis for production
-- Set up proper CORS settings
-- Use a production WSGI server (Gunicorn)
-
-### Frontend Deployment
-- Build the application: `npm run build`
-- Deploy to Vercel, Netlify, or any static hosting service
-- Configure environment variables for production API URL
