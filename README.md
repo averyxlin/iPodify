@@ -2,58 +2,6 @@
 
 A modern music database and API built with Django and React, featuring an iPod-inspired interface with Spotify embed integration.
 
-## Project Requirements Compliance
-
-This project meets the full-stack coding task requirements with the following implementation:
-
-### Item Management System
-- **Items** = Songs (with title, artist, album, year, duration, etc.)
-- **Groups** = Artist (Primary group) and Album (Secondary group)
-- **Unique Constraints**: No duplicate song titles within the same artist (Primary group) AND no duplicate song titles within the same album (Secondary group)
-
-### API Endpoints
-- `GET /api/songs/` - List all items (songs) with pagination and filtering
-- `POST /api/songs/` - Create new item (song)
-- `PUT /api/songs/{id}/` - Update existing item (song) - full update
-- `PATCH /api/songs/{id}/` - Update existing item (song) - partial update
-- `GET /api/songs/{id}/` - Get specific item (song)
-- `DELETE /api/songs/{id}/` - Delete item (song)
-
-### Business Rules Implementation
-The unique constraint logic ensures:
-- A song titled "Rock" can exist in Artist A (Primary) AND Artist B (Primary)
-- A song titled "Rock" can exist in Album X (Secondary) AND Album Y (Secondary)
-- "Rock" cannot exist twice in the same artist (Primary group violation)
-- "Rock" cannot exist twice in the same album (Secondary group violation)
-- The same title can appear across different artists and albums
-
-**How This Satisfies the Requirements:**
-
-The task requires: *"Each group should contain only unique item names. For example, an item named 'Rock' can appear in both the Primary and Secondary groups, but there can't be two items named 'Rock' in the same group."*
-
-**Our Implementation:**
-- **Primary Group (Artist)**: `unique_together = [('title', 'artist')]` ensures no duplicate song titles within the same artist
-- **Secondary Group (Album)**: `unique_together = [('title', 'album')]` ensures no duplicate song titles within the same album
-- **Combined Constraints**: `unique_together = [('title', 'artist'), ('title', 'album')]` enforces both constraints simultaneously
-
-**Why This Works:**
-1. **Artist as Primary Group**: Each artist is a unique "group" - you can't have two songs with the same title by the same artist
-2. **Album as Secondary Group**: Each album is a unique "group" - you can't have two songs with the same title in the same album
-3. **Cross-Group Duplicates Allowed**: The same song title can exist across different artists (different primary groups) and different albums (different secondary groups)
-
-**Example Scenarios:**
-✅ **Allowed:**
-- "Bohemian Rhapsody" by Queen (Artist: Queen, Album: A Night at the Opera)
-- "Bohemian Rhapsody" by Panic! at the Disco (Artist: Panic! at the Disco, Album: Bohemian Rhapsody - Single)
-- "Rock" by Artist A (Artist: Artist A, Album: Album X)
-- "Rock" by Artist B (Artist: Artist B, Album: Album Y)
-
-❌ **Blocked by Constraint:**
-- Two songs titled "Rock" by the same Artist A (Primary group violation)
-- Two songs titled "Rock" in the same Album X, even by different artists (Secondary group violation)
-
-This implementation satisfies the requirement: "Each group should contain only unique item names. For example, an item named 'Rock' can appear in both the Primary and Secondary groups, but there can't be two items named 'Rock' in the same group."
-
 ## Technical Stack
 
 ### Backend (Django)
